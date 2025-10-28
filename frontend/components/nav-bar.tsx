@@ -19,7 +19,7 @@ export function NavBar() {
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center space-x-8">
             <Link href="/videos" className="text-xl font-bold">
-              Opinion Monitor
+              舆情监测
             </Link>
             <div className="flex space-x-4">
               <Link
@@ -30,7 +30,7 @@ export function NavBar() {
                     : 'text-gray-600 hover:bg-gray-50'
                 }`}
               >
-                Videos
+                视频
               </Link>
               <Link
                 href="/upload"
@@ -40,16 +40,16 @@ export function NavBar() {
                     : 'text-gray-600 hover:bg-gray-50'
                 }`}
               >
-                Upload
+                上传
               </Link>
             </div>
           </div>
           <div className="flex items-center space-x-4">
             <span className="text-sm text-gray-600">
-              Welcome, {user.username}
+              欢迎，{user.username}
             </span>
             <Button variant="outline" size="sm" onClick={logout}>
-              Logout
+              退出登录
             </Button>
           </div>
         </div>

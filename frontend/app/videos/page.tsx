@@ -7,7 +7,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { NavBar } from '@/components/nav-bar';
-import { FileVideo, Clock, Trash2, Eye, RefreshCw } from 'lucide-react';
+import { VideoModal } from '@/components/video-modal';
+import { FileVideo, Clock, Trash2, Eye, RefreshCw, Play } from 'lucide-react';
 
 export default function VideosPage() {
   const router = useRouter();
@@ -16,6 +17,10 @@ export default function VideosPage() {
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [filter, setFilter] = useState<string>('');
+  const [selectedVideo, setSelectedVideo] = useState<Video | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
   useEffect(() => {
     loadVideos();
@@ -42,35 +47,40 @@ export default function VideosPage() {
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('Are you sure you want to delete this video?')) return;
+    if (!confirm('确定要删除这个视频吗？')) return;
 
     try {
       await videoAPI.delete(id);
       loadVideos();
     } catch (err) {
-      alert('Failed to delete video');
+      alert('删除视频失败');
     }
+  };
+
+  const handleVideoPreview = (video: Video) => {
+    setSelectedVideo(video);
+    setIsModalOpen(true);
   };
 
   const getStatusBadge = (status: string) => {
     const variants: Record<string, any> = {
-      pending: { variant: 'secondary', label: 'Pending' },
-      processing: { variant: 'default', label: 'Processing' },
-      completed: { variant: 'outline', label: 'Completed', className: 'bg-green-50 text-green-700 border-green-200' },
-      failed: { variant: 'destructive', label: 'Failed' },
+      pending: { variant: 'secondary', label: '待处理' },
+      processing: { variant: 'default', label: '处理中' },
+      completed: { variant: 'outline', label: '已完成', className: 'bg-green-50 text-green-700 border-green-200' },
+      failed: { variant: 'destructive', label: '失败' },
     };
     const config = variants[status] || variants.pending;
     return <Badge {...config}>{config.label}</Badge>;
   };
 
   const formatDate = (date: string) => {
-    return new Date(date).toLocaleString();
+    return new Date(date).toLocaleString('zh-CN');
   };
 
   const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes';
+    if (bytes === 0) return '0 字节';
     const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const sizes = ['字节', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
   };
@@ -80,7 +90,7 @@ export default function VideosPage() {
       <div className="min-h-screen bg-gray-50">
         <NavBar />
         <div className="container mx-auto px-4 py-8">
-          <div className="text-center">Loading...</div>
+          <div className="text-center">加载中...</div>
         </div>
       </div>
     );
@@ -92,18 +102,18 @@ export default function VideosPage() {
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-6">
           <div>
-            <h1 className="text-3xl font-bold">My Videos</h1>
+            <h1 className="text-3xl font-bold">我的视频</h1>
             <p className="text-gray-600 mt-1">
-              {total} video{total !== 1 ? 's' : ''} in total
+              共 {total} 个视频
             </p>
           </div>
           <div className="flex space-x-3">
             <Button variant="outline" onClick={() => loadVideos()}>
               <RefreshCw className="h-4 w-4 mr-2" />
-              Refresh
+              刷新
             </Button>
             <Button onClick={() => router.push('/upload')}>
-              Upload Videos
+              上传视频
             </Button>
           </div>
         </div>
@@ -115,35 +125,35 @@ export default function VideosPage() {
             size="sm"
             onClick={() => setFilter('')}
           >
-            All
+            全部
           </Button>
           <Button
             variant={filter === 'pending' ? 'default' : 'outline'}
             size="sm"
             onClick={() => setFilter('pending')}
           >
-            Pending
+            待处理
           </Button>
           <Button
             variant={filter === 'processing' ? 'default' : 'outline'}
             size="sm"
             onClick={() => setFilter('processing')}
           >
-            Processing
+            处理中
           </Button>
           <Button
             variant={filter === 'completed' ? 'default' : 'outline'}
             size="sm"
             onClick={() => setFilter('completed')}
           >
-            Completed
+            已完成
           </Button>
           <Button
             variant={filter === 'failed' ? 'default' : 'outline'}
             size="sm"
             onClick={() => setFilter('failed')}
           >
-            Failed
+            失败
           </Button>
         </div>
 
@@ -152,12 +162,12 @@ export default function VideosPage() {
           <Card>
             <CardContent className="py-12 text-center">
               <FileVideo className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-              <p className="text-gray-600">No videos found</p>
+              <p className="text-gray-600">未找到视频</p>
               <Button
                 className="mt-4"
                 onClick={() => router.push('/upload')}
               >
-                Upload Your First Video
+                上传您的第一个视频
               </Button>
             </CardContent>
           </Card>
@@ -179,7 +189,7 @@ export default function VideosPage() {
                       {video.duration > 0 && (
                         <span className="flex items-center">
                           <Clock className="h-3 w-3 mr-1" />
-                          {Math.round(video.duration)}s
+                          {Math.round(video.duration)}秒
                         </span>
                       )}
                     </div>
@@ -187,9 +197,18 @@ export default function VideosPage() {
                 </CardHeader>
                 <CardContent>
                   <p className="text-xs text-gray-500 mb-4">
-                    Uploaded: {formatDate(video.created_at)}
+                    上传时间：{formatDate(video.created_at)}
                   </p>
                   <div className="flex space-x-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="flex-1"
+                      onClick={() => handleVideoPreview(video)}
+                    >
+                      <Play className="h-4 w-4 mr-1" />
+                      预览
+                    </Button>
                     {video.status === 'completed' && (
                       <Button
                         size="sm"
@@ -197,7 +216,7 @@ export default function VideosPage() {
                         onClick={() => router.push(`/reports/${video.id}`)}
                       >
                         <Eye className="h-4 w-4 mr-1" />
-                        View Report
+                        查看报告
                       </Button>
                     )}
                     <Button
@@ -222,19 +241,29 @@ export default function VideosPage() {
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page === 1}
             >
-              Previous
+              上一页
             </Button>
             <span className="flex items-center px-4">
-              Page {page} of {Math.ceil(total / 12)}
+              第 {page} 页，共 {Math.ceil(total / 12)} 页
             </span>
             <Button
               variant="outline"
               onClick={() => setPage((p) => p + 1)}
               disabled={page >= Math.ceil(total / 12)}
             >
-              Next
+              下一页
             </Button>
           </div>
+        )}
+
+        {/* Video Modal */}
+        {selectedVideo && (
+          <VideoModal
+            video={selectedVideo}
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+            apiUrl={API_URL}
+          />
         )}
       </div>
     </div>

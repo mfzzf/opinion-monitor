@@ -56,7 +56,7 @@ export default function UploadPage() {
 
   const handleUpload = async () => {
     if (files.length === 0) {
-      setError('Please select at least one video file');
+      setError('请至少选择一个视频文件');
       return;
     }
 
@@ -79,16 +79,16 @@ export default function UploadPage() {
 
       router.push('/videos');
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Upload failed');
+      setError(err.response?.data?.error || '上传失败');
     } finally {
       setUploading(false);
     }
   };
 
   const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes';
+    if (bytes === 0) return '0 字节';
     const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const sizes = ['字节', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
   };
@@ -99,9 +99,9 @@ export default function UploadPage() {
       <div className="container mx-auto px-4 py-8">
         <Card className="max-w-3xl mx-auto">
           <CardHeader>
-            <CardTitle>Upload Videos</CardTitle>
+            <CardTitle>上传视频</CardTitle>
             <CardDescription>
-              Upload videos for sentiment analysis. Batch upload is supported.
+              上传视频进行情感分析，支持批量上传。
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -125,10 +125,10 @@ export default function UploadPage() {
             >
               <Upload className="mx-auto h-12 w-12 text-gray-400 mb-4" />
               <p className="text-lg font-medium mb-2">
-                Drag and drop videos here
+                拖拽视频文件到此处
               </p>
               <p className="text-sm text-gray-500 mb-4">
-                or click the button below to select files
+                或点击下方按钮选择文件
               </p>
               <input
                 ref={fileInputRef}
@@ -144,14 +144,14 @@ export default function UploadPage() {
                 onClick={() => fileInputRef.current?.click()}
                 disabled={uploading}
               >
-                Select Videos
+                选择视频
               </Button>
             </div>
 
             {/* File List */}
             {files.length > 0 && (
               <div className="space-y-2">
-                <h3 className="font-medium">Selected Files ({files.length})</h3>
+                <h3 className="font-medium">已选择文件 ({files.length})</h3>
                 <div className="space-y-2 max-h-64 overflow-y-auto">
                   {files.map((file, index) => (
                     <div
@@ -185,7 +185,7 @@ export default function UploadPage() {
             {uploading && (
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span>Uploading...</span>
+                  <span>上传中...</span>
                   <span>{uploadProgress}%</span>
                 </div>
                 <Progress value={uploadProgress} />
@@ -200,14 +200,14 @@ export default function UploadPage() {
                 onClick={() => router.push('/videos')}
                 disabled={uploading}
               >
-                Cancel
+                取消
               </Button>
               <Button
                 type="button"
                 onClick={handleUpload}
                 disabled={uploading || files.length === 0}
               >
-                {uploading ? 'Uploading...' : 'Upload Videos'}
+                {uploading ? '上传中...' : '上传视频'}
               </Button>
             </div>
           </CardContent>
