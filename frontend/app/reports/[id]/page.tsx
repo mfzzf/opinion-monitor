@@ -55,9 +55,9 @@ export default function ReportDetailPage() {
 
   const getSentimentBadge = (label: string) => {
     const variants: Record<string, any> = {
-      positive: { variant: 'outline', label: '积极', className: 'bg-green-50 text-green-700 border-green-200' },
+      positive: { variant: 'outline', label: '正面', className: 'bg-green-50 text-green-700 border-green-200' },
       neutral: { variant: 'secondary', label: '中性' },
-      negative: { variant: 'destructive', label: '消极' },
+      negative: { variant: 'destructive', label: '负面' },
     };
     const config = variants[label] || variants.neutral;
     return <Badge {...config}>{config.label}</Badge>;
@@ -249,10 +249,10 @@ export default function ReportDetailPage() {
             {/* Detailed Analysis */}
             <Card>
               <CardHeader>
-                <CardTitle>详细分析</CardTitle>
+                <CardTitle>舆情分析报告</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-gray-700 leading-relaxed">
+                <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
                   {report.detailed_analysis}
                 </p>
               </CardContent>
@@ -262,7 +262,7 @@ export default function ReportDetailPage() {
             {recommendations.length > 0 && (
               <Card>
                 <CardHeader>
-                  <CardTitle>建议</CardTitle>
+                  <CardTitle>应对策略</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <ul className="space-y-2">
@@ -285,7 +285,7 @@ export default function ReportDetailPage() {
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <TrendingUp className="h-5 w-5 mr-2" />
-                  情感倾向
+                  舆情态度
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -294,15 +294,15 @@ export default function ReportDetailPage() {
                 </div>
                 <div>
                   <div className="flex justify-between text-sm mb-2">
-                    <span>得分</span>
+                    <span>舆情指数</span>
                     <span className="font-semibold">
-                      {(report.sentiment_score * 100).toFixed(1)}%
+                      {(report.sentiment_score * 100).toFixed(1)}
                     </span>
                   </div>
                   <Progress value={report.sentiment_score * 100} />
                 </div>
                 <p className="text-xs text-gray-500">
-                  0% = 非常消极，50% = 中性，100% = 非常积极
+                  0 = 强负面，50 = 中性，100 = 强正面
                 </p>
               </CardContent>
             </Card>
@@ -312,7 +312,7 @@ export default function ReportDetailPage() {
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <AlertTriangle className="h-5 w-5 mr-2" />
-                  风险评估
+                  舆情风险等级
                 </CardTitle>
               </CardHeader>
               <CardContent>
