@@ -21,6 +21,8 @@ type Video struct {
 	OriginalFilename string         `gorm:"type:varchar(255);not null" json:"original_filename"`
 	FilePath         string         `gorm:"type:varchar(500);not null" json:"file_path"`
 	CoverPath        string         `gorm:"type:varchar(500)" json:"cover_path"`
+	AudioPath        string         `gorm:"type:varchar(500)" json:"audio_path"`
+	TranscriptText   string         `gorm:"type:text" json:"transcript_text"`
 	FileSize         int64          `json:"file_size"`
 	Duration         float64        `json:"duration"`
 	Status           VideoStatus    `gorm:"type:varchar(20);default:'pending';index" json:"status"`

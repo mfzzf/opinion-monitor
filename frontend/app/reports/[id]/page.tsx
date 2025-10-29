@@ -21,6 +21,7 @@ export default function ReportDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [isTextExpanded, setIsTextExpanded] = useState(false);
+  const [isTranscriptExpanded, setIsTranscriptExpanded] = useState(false);
 
   useEffect(() => {
     loadReport();
@@ -158,7 +159,7 @@ export default function ReportDetailPage() {
             {/* Cover Text */}
             <Card>
               <CardHeader>
-                <CardTitle>提取的文本</CardTitle>
+                <CardTitle>封面文字</CardTitle>
                 <CardDescription>
                   使用AI从视频封面提取的文本
                 </CardDescription>
@@ -198,6 +199,52 @@ export default function ReportDetailPage() {
                 )}
               </CardContent>
             </Card>
+
+            {/* Audio Transcript */}
+            {report.transcript_text && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>音频转录</CardTitle>
+                  <CardDescription>
+                    使用Whisper AI从视频音频提取的文本
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="relative">
+                    <p 
+                      className={`text-sm whitespace-pre-wrap bg-blue-50 p-4 rounded-md transition-all ${
+                        isTranscriptExpanded ? '' : 'line-clamp-3'
+                      }`}
+                    >
+                      {report.transcript_text}
+                    </p>
+                    {!isTranscriptExpanded && report.transcript_text.length > 100 && (
+                      <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-blue-50 to-transparent rounded-b-md pointer-events-none" />
+                    )}
+                  </div>
+                  {report.transcript_text.length > 100 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setIsTranscriptExpanded(!isTranscriptExpanded)}
+                      className="w-full"
+                    >
+                      {isTranscriptExpanded ? (
+                        <>
+                          <ChevronUp className="h-4 w-4 mr-1" />
+                          收起
+                        </>
+                      ) : (
+                        <>
+                          <ChevronDown className="h-4 w-4 mr-1" />
+                          展开全部
+                        </>
+                      )}
+                    </Button>
+                  )}
+                </CardContent>
+              </Card>
+            )}
 
             {/* Detailed Analysis */}
             <Card>

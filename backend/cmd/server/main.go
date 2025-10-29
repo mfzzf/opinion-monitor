@@ -6,6 +6,7 @@ import (
 	"opinion-monitor/internal/config"
 	"opinion-monitor/internal/models"
 	"opinion-monitor/internal/worker"
+	"opinion-monitor/pkg/whisper"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -32,8 +33,20 @@ func main() {
 	// Initialize job queue
 	jobQueue := worker.NewJobQueue()
 
+	// Initialize Whisper client
+	whisperClient := whisper.NewClient(cfg.Whisper.ServiceURL)
+	log.Printf("Whisper service configured at: %s", cfg.Whisper.ServiceURL)
+
+	// Check Whisper service health (non-blocking)
+	if err := whisperClient.HealthCheck(); err != nil {
+		log.Printf("Warning: Whisper service health check failed: %v", err)
+		log.Printf("Audio transcription will be unavailable")
+	} else {
+		log.Printf("Whisper service is healthy")
+	}
+
 	// Start worker pool
-	workerPool := worker.NewWorkerPool(cfg, db, jobQueue)
+	workerPool := worker.NewWorkerPool(cfg, db, jobQueue, whisperClient)
 	workerPool.Start()
 
 	// Setup Gin router

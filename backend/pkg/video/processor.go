@@ -63,6 +63,33 @@ func (p *Processor) GetVideoDuration(videoPath string) (float64, error) {
 	return duration, nil
 }
 
+// ExtractAudio extracts audio from the video file
+func (p *Processor) ExtractAudio(videoPath, outputPath string) error {
+	// Ensure output directory exists
+	outputDir := filepath.Dir(outputPath)
+	if err := os.MkdirAll(outputDir, 0755); err != nil {
+		return fmt.Errorf("failed to create output directory: %w", err)
+	}
+
+	// Use ffmpeg to extract audio to WAV format
+	cmd := exec.Command("ffmpeg",
+		"-i", videoPath,
+		"-vn",                    // No video
+		"-acodec", "pcm_s16le",   // PCM 16-bit little-endian
+		"-ar", "16000",           // 16kHz sample rate
+		"-ac", "1",               // Mono
+		"-y",                     // Overwrite output file
+		outputPath,
+	)
+
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("ffmpeg failed: %w, output: %s", err, string(output))
+	}
+
+	return nil
+}
+
 // IsVideoFile checks if the file is a supported video format
 func IsVideoFile(filename string) bool {
 	ext := strings.ToLower(filepath.Ext(filename))

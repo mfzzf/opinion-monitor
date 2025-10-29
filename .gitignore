@@ -35,3 +35,4 @@ backend/config.yaml
 *.so
 *.dylib
 
+whisper-large-v3/

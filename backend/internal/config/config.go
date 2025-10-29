@@ -10,6 +10,7 @@ type Config struct {
 	OpenAI   OpenAIConfig   `mapstructure:"openai"`
 	JWT      JWTConfig      `mapstructure:"jwt"`
 	Worker   WorkerConfig   `mapstructure:"worker"`
+	Whisper  WhisperConfig  `mapstructure:"whisper"`
 }
 
 type ServerConfig struct {
@@ -44,6 +45,10 @@ type WorkerConfig struct {
 	Concurrency int `mapstructure:"concurrency"`
 }
 
+type WhisperConfig struct {
+	ServiceURL string `mapstructure:"service_url"`
+}
+
 func Load() (*Config, error) {
 	viper.SetConfigName("config")
 	viper.SetConfigType("yaml")
@@ -71,6 +76,8 @@ func Load() (*Config, error) {
 	viper.SetDefault("jwt.refresh_expiry", "168h") // 7 days
 
 	viper.SetDefault("worker.concurrency", 5)
+
+	viper.SetDefault("whisper.service_url", "http://localhost:5000")
 
 	// Allow environment variables
 	viper.AutomaticEnv()

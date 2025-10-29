@@ -6,6 +6,7 @@ A full-stack video opinion monitoring system that uses AI to extract text from v
 
 - 🎥 **Video Upload**: Batch video upload with drag-and-drop support
 - 🤖 **AI Analysis**: Automatic text extraction from video covers using OpenAI Vision API
+- 🎙️ **Audio Transcription**: Whisper large-v3 integration for audio-to-text transcription
 - 📊 **Sentiment Analysis**: Detailed sentiment reports with scores, risk levels, and recommendations
 - 🔐 **User Authentication**: Secure JWT-based authentication
 - ⚡ **Async Processing**: Background job queue for efficient video processing
@@ -19,6 +20,7 @@ A full-stack video opinion monitoring system that uses AI to extract text from v
 - **MySQL** for data persistence
 - **FFmpeg** for video processing
 - **OpenAI API** for AI-powered analysis
+- **Python 3.12** with Whisper large-v3 for audio transcription
 
 ### Frontend
 - **Next.js 14** with App Router
@@ -40,12 +42,17 @@ opinion-monitor/
 │   ├── pkg/
 │   │   ├── ai/            # OpenAI client
 │   │   ├── auth/          # JWT utilities
-│   │   └── video/         # Video processing
+│   │   ├── video/         # Video processing
+│   │   └── whisper/       # Whisper client
+│   ├── whisper-service/   # Python Whisper microservice
+│   ├── whisper-large-v3/  # Whisper model files
 │   └── config.yaml        # Configuration file
 ├── frontend/               # Next.js frontend
 │   ├── app/               # App router pages
 │   ├── components/        # React components
 │   └── lib/               # Utilities and API client
+├── WHISPER_SETUP.md       # Whisper integration guide
+├── QUICKSTART_WHISPER.md  # Quick start for Whisper
 └── README.md
 ```
 
@@ -56,6 +63,7 @@ opinion-monitor/
 - MySQL 8.0 or higher
 - FFmpeg (for video processing)
 - OpenAI API key (or compatible API)
+- Python 3.12 with conda (for Whisper audio transcription)
 
 ### Frontend
 - Node.js 18 or higher
@@ -98,7 +106,27 @@ go run cmd/server/main.go
 
 The backend will start on `http://localhost:8080`
 
-### 3. Frontend Setup
+### 3. Whisper Service Setup (Audio Transcription)
+
+```bash
+cd backend/whisper-service
+
+# Create conda environment
+conda create -n whisper-service python=3.12 -y
+conda activate whisper-service
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Start service
+python app.py
+```
+
+The Whisper service will start on `http://localhost:5000`
+
+**For detailed Whisper setup instructions, see [WHISPER_SETUP.md](WHISPER_SETUP.md)**
+
+### 4. Frontend Setup
 
 ```bash
 cd frontend
@@ -145,6 +173,9 @@ jwt:
 
 worker:
   concurrency: 5
+
+whisper:
+  service_url: "http://localhost:5000"
 ```
 
 ### Frontend Configuration (frontend/.env.local)
@@ -202,10 +233,12 @@ NEXT_PUBLIC_API_URL=http://localhost:8080
 3. **Job Creation**: A job is created for each video and queued
 4. **Processing**: Worker pool picks up jobs asynchronously:
    - Extract cover frame from video at 1 second using FFmpeg
+   - Extract audio from video and transcribe using Whisper large-v3
    - Use OpenAI Vision API to extract text from cover image
-   - Use OpenAI Chat API to analyze sentiment and generate report
-   - Save results to database
-5. **Display**: User views detailed sentiment analysis report
+   - Combine cover text and audio transcription
+   - Use OpenAI Chat API to analyze sentiment on combined text
+   - Save results to database with both text sources
+5. **Display**: User views detailed sentiment analysis report with cover text and transcript
 
 ## Development
 

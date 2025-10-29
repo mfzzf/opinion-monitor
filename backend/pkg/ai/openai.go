@@ -91,27 +91,74 @@ func (c *OpenAIClient) ExtractTextFromImage(imagePath string) (string, error) {
 func (c *OpenAIClient) AnalyzeSentiment(coverText string) (*SentimentReport, error) {
 	ctx := context.Background()
 
-	prompt := fmt.Sprintf(`分析以下从短视频封面中提取的文字内容，进行舆情监测分析。
+	prompt := fmt.Sprintf(`你是一位专业的舆情分析专家。请分析以下从短视频中提取的文本内容（包含封面文字和音频转录），进行全面的舆情监测分析。
 
-文字内容：%s
+**分析内容：**
+%s
 
-请提供详细的舆情分析报告，严格按照以下JSON格式返回（不要包含任何其他文字）：
+---
+
+请从以下维度进行深度分析，并严格按照JSON格式返回结果（不要包含任何其他文字）：
+
 {
   "sentiment_score": 0.75,
   "sentiment_label": "positive",
   "key_topics": ["话题1", "话题2", "话题3"],
   "risk_level": "low",
-  "detailed_analysis": "详细的情感分析，包括情感倾向、主要观点、可能的影响等",
+  "detailed_analysis": "详细的情感分析内容",
   "recommendations": ["建议1", "建议2", "建议3"]
 }
 
-注意：
-- sentiment_score: 0-1之间的浮点数，表示情感倾向（0=极端负面，0.5=中性，1=极端正面）
-- sentiment_label: "positive"(正面)、"neutral"(中性)或"negative"(负面)
-- key_topics: 3-5个关键主题
-- risk_level: "low"(低风险)、"medium"(中等风险)或"high"(高风险)
-- detailed_analysis: 100-200字的详细分析
-- recommendations: 2-3条可操作的建议`, coverText)
+**字段说明：**
+
+1. **sentiment_score** (情感得分)
+   - 类型：0.0-1.0之间的浮点数
+   - 标准：0.0=极端负面，0.3=负面，0.5=中性，0.7=正面，1.0=极端正面
+   - 考虑因素：用词情绪、论调态度、话题敏感度
+
+2. **sentiment_label** (情感标签)
+   - 可选值："positive"(正面)、"neutral"(中性)、"negative"(负面)
+   - 判断依据：
+     * positive: score > 0.6，表达积极、赞扬、支持的态度
+     * neutral: 0.4 ≤ score ≤ 0.6，客观陈述或情感模糊
+     * negative: score < 0.4，表达批评、质疑、不满的态度
+
+3. **key_topics** (关键主题)
+   - 提取3-5个核心话题关键词
+   - 应包括：人物/事件名称、行业领域、争议焦点
+   - 示例：["于书欣", "职场霸凌", "综艺黑幕", "公众人物责任"]
+
+4. **risk_level** (舆情风险等级)
+   - 可选值："low"(低风险)、"medium"(中等风险)、"high"(高风险)
+   - 评估标准：
+     * high: 涉及重大负面事件、公众人物丑闻、社会敏感话题，可能引发广泛关注和负面影响
+     * medium: 存在争议性内容、部分负面声音，但影响范围有限
+     * low: 正面或中性内容，无明显风险
+
+5. **detailed_analysis** (详细分析)
+   - 字数：150-300字
+   - 必须包含：
+     * 内容概述（简述视频主要信息）
+     * 情感倾向分析（解释情感得分的依据）
+     * 舆论走向判断（可能的公众反应）
+     * 潜在影响评估（对相关方的影响）
+   - 语言风格：专业、客观、有深度
+
+6. **recommendations** (应对建议)
+   - 提供2-4条具体可行的建议
+   - 针对对象：内容创作者、相关当事人、舆情监测团队
+   - 建议类型：
+     * 内容优化建议
+     * 风险应对措施
+     * 公关沟通策略
+     * 持续监测要点
+
+**分析要求：**
+- 综合考虑封面文字和音频内容，不要遗漏任何重要信息
+- 关注事实陈述、情感倾向、价值观导向
+- 识别潜在的敏感词、争议点、舆论风险
+- 保持客观中立，基于内容本身进行分析
+- 如果封面和音频传递的情感不一致，以整体综合判断为准`, coverText)
 
 	// 创建聊天完成请求
 	chatCompletion, err := c.client.Chat.Completions.New(ctx, openai.ChatCompletionNewParams{

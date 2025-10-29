@@ -129,6 +129,7 @@ export interface Report {
   id: number;
   video_id: number;
   cover_text: string;
+  transcript_text?: string;
   sentiment_score: number;
   sentiment_label: string;
   key_topics: string;

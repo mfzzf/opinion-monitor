@@ -8,21 +8,25 @@ import (
 	"opinion-monitor/internal/models"
 	"opinion-monitor/pkg/ai"
 	"opinion-monitor/pkg/video"
+	"opinion-monitor/pkg/whisper"
+	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"gorm.io/gorm"
 )
 
 type WorkerPool struct {
-	cfg       *config.Config
-	db        *gorm.DB
-	queue     *JobQueue
-	aiClient  *ai.OpenAIClient
-	processor *video.Processor
+	cfg           *config.Config
+	db            *gorm.DB
+	queue         *JobQueue
+	aiClient      *ai.OpenAIClient
+	whisperClient *whisper.Client
+	processor     *video.Processor
 }
 
-func NewWorkerPool(cfg *config.Config, db *gorm.DB, queue *JobQueue) *WorkerPool {
+func NewWorkerPool(cfg *config.Config, db *gorm.DB, queue *JobQueue, whisperClient *whisper.Client) *WorkerPool {
 	aiClient := ai.NewOpenAIClient(
 		cfg.OpenAI.APIBase,
 		cfg.OpenAI.APIKey,
@@ -31,11 +35,12 @@ func NewWorkerPool(cfg *config.Config, db *gorm.DB, queue *JobQueue) *WorkerPool
 	)
 
 	return &WorkerPool{
-		cfg:       cfg,
-		db:        db,
-		queue:     queue,
-		aiClient:  aiClient,
-		processor: video.NewProcessor(),
+		cfg:           cfg,
+		db:            db,
+		queue:         queue,
+		aiClient:      aiClient,
+		whisperClient: whisperClient,
+		processor:     video.NewProcessor(),
 	}
 }
 
@@ -91,16 +96,67 @@ func (wp *WorkerPool) processVideo(videoID uint) error {
 		return fmt.Errorf("failed to update cover path: %w", err)
 	}
 
+	// Extract audio from video
+	audioFilename := fmt.Sprintf("audio_%d.wav", videoID)
+	audioPath := filepath.Join(filepath.Dir(videoRecord.FilePath), audioFilename)
+
+	if err := wp.processor.ExtractAudio(videoRecord.FilePath, audioPath); err != nil {
+		log.Printf("Warning: failed to extract audio: %v", err)
+		// Continue processing even if audio extraction fails
+	}
+
+	// Update video with audio path
+	if err := wp.db.Model(&videoRecord).Update("audio_path", audioPath).Error; err != nil {
+		return fmt.Errorf("failed to update audio path: %w", err)
+	}
+
+	// Transcribe audio using Whisper
+	var transcriptText string
+	if wp.whisperClient != nil {
+		// Get absolute path for video file
+		absVideoPath := videoRecord.FilePath
+		if !filepath.IsAbs(absVideoPath) {
+			// If relative path, prepend current working directory
+			cwd, err := os.Getwd()
+			if err == nil {
+				absVideoPath = filepath.Join(cwd, absVideoPath)
+			}
+		}
+		
+		transcript, err := wp.whisperClient.TranscribeAudio(absVideoPath)
+		if err != nil {
+			log.Printf("Warning: failed to transcribe audio: %v", err)
+			// Continue processing even if transcription fails
+		} else {
+			transcriptText = transcript
+			log.Printf("Transcribed text: %s", transcriptText)
+
+			// Update video with transcript text
+			if err := wp.db.Model(&videoRecord).Update("transcript_text", transcriptText).Error; err != nil {
+				return fmt.Errorf("failed to update transcript text: %w", err)
+			}
+		}
+	}
+
 	// Extract text from cover using AI
 	coverText, err := wp.aiClient.ExtractTextFromImage(coverPath)
 	if err != nil {
 		return fmt.Errorf("failed to extract text from image: %w", err)
 	}
 
-	log.Printf("Extracted text: %s", coverText)
+	log.Printf("Extracted cover text: %s", coverText)
 
-	// Analyze sentiment
-	report, err := wp.aiClient.AnalyzeSentiment(coverText)
+	// Combine cover text and transcript for comprehensive analysis
+	var combinedText strings.Builder
+	combinedText.WriteString("封面文字：\n")
+	combinedText.WriteString(coverText)
+	if transcriptText != "" {
+		combinedText.WriteString("\n\n音频转录文字：\n")
+		combinedText.WriteString(transcriptText)
+	}
+
+	// Analyze sentiment using combined text
+	report, err := wp.aiClient.AnalyzeSentiment(combinedText.String())
 	if err != nil {
 		return fmt.Errorf("failed to analyze sentiment: %w", err)
 	}
@@ -115,6 +171,7 @@ func (wp *WorkerPool) processVideo(videoID uint) error {
 	reportRecord := models.Report{
 		VideoID:          videoID,
 		CoverText:        coverText,
+		TranscriptText:   transcriptText,
 		SentimentScore:   report.SentimentScore,
 		SentimentLabel:   report.SentimentLabel,
 		KeyTopics:        string(keyTopicsJSON),
