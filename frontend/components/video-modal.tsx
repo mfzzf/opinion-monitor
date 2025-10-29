@@ -44,11 +44,12 @@ export function VideoModal({ video, isOpen, onClose, apiUrl }: VideoModalProps) 
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-5xl bg-white rounded-lg shadow-2xl overflow-hidden"
+        className="relative w-full max-w-7xl bg-white rounded-lg shadow-2xl overflow-hidden flex flex-col"
+        style={{ height: '90vh', maxHeight: '90vh' }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b bg-gray-50">
+        <div className="flex items-center justify-between p-4 border-b bg-gray-50 flex-shrink-0">
           <div className="flex items-center space-x-3 flex-1 min-w-0">
             <FileVideo className="h-5 w-5 text-gray-400 flex-shrink-0" />
             <div className="min-w-0 flex-1">
@@ -73,17 +74,17 @@ export function VideoModal({ video, isOpen, onClose, apiUrl }: VideoModalProps) 
           </Button>
         </div>
 
-        {/* Video Player */}
-        <div className="bg-black">
+        {/* Video Player - 自适应高度 */}
+        <div className="bg-black flex-1 overflow-hidden relative">
           <VideoPlayer
             videoUrl={videoUrl}
             posterUrl={posterUrl}
-            className="w-full"
+            maxHeight={1200}
           />
         </div>
 
         {/* Footer Info */}
-        <div className="p-4 bg-gray-50 text-sm text-gray-600">
+        <div className="p-4 bg-gray-50 text-sm text-gray-600 flex-shrink-0">
           <p>上传时间：{new Date(video.created_at).toLocaleString('zh-CN')}</p>
         </div>
       </div>

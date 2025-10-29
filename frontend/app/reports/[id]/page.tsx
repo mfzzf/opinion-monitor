@@ -147,10 +147,11 @@ export default function ReportDetailPage() {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="relative aspect-video bg-gray-100 rounded-lg overflow-hidden">
+                <div className="relative bg-black rounded-lg overflow-hidden" style={{ height: '600px' }}>
                   <VideoPlayer
                     videoUrl={`${API_URL}/${video.file_path}`}
                     posterUrl={video.cover_path ? `${API_URL}/${video.cover_path}` : undefined}
+                    maxHeight={600}
                   />
                 </div>
               </CardContent>

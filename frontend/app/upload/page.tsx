@@ -101,7 +101,7 @@ export default function UploadPage() {
           <CardHeader>
             <CardTitle>上传视频</CardTitle>
             <CardDescription>
-              上传视频进行情感分析，支持批量上传。
+              上传视频进行舆情分析，支持批量上传。支持格式：MP4, AVI, MOV, MKV, FLV, WMV, WebM, M4V, 3GP, TS等。
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -127,13 +127,16 @@ export default function UploadPage() {
               <p className="text-lg font-medium mb-2">
                 拖拽视频文件到此处
               </p>
-              <p className="text-sm text-gray-500 mb-4">
+              <p className="text-sm text-gray-500 mb-2">
                 或点击下方按钮选择文件
+              </p>
+              <p className="text-xs text-gray-400 mb-4">
+                支持：MP4, AVI, MOV, MKV, FLV, WMV, WebM, M4V, 3GP, TS等常见视频格式
               </p>
               <input
                 ref={fileInputRef}
                 type="file"
-                accept="video/*"
+                accept="video/mp4,video/x-msvideo,video/quicktime,video/x-matroska,video/x-flv,video/x-ms-wmv,video/webm,video/x-m4v,video/3gpp,video/mp2t,video/*"
                 multiple
                 onChange={handleFileChange}
                 className="hidden"
