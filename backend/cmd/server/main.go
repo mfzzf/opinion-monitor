@@ -78,7 +78,8 @@ func main() {
 		authGroup.POST("/login", authHandler.Login)
 		authGroup.POST("/logout", authHandler.Logout)
 		authGroup.POST("/refresh", authHandler.RefreshToken)
-		authGroup.GET("/me", authHandler.Me)
+		// Protect /me with auth middleware so it can read user context
+		authGroup.GET("/me", api.AuthMiddleware(cfg), authHandler.Me)
 	}
 
 	// Protected routes
